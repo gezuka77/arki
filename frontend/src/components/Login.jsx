@@ -29,7 +29,7 @@ export default function Login({ onLogin }) {
             <Icon name="basket" size={26} />
           </span>
           <div>
-            Arki<small>Everyday spending</small>
+            Arki Tracker<small>Everyday spending</small>
           </div>
         </div>
         <h1>

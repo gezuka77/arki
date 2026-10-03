@@ -1,6 +1,6 @@
 {
-  "name": "Arki",
-  "short_name": "Arki",
+  "name": "Arki Tracker",
+  "short_name": "Arki Tracker",
   "description": "Everyday expenses for your household",
   "start_url": "/",
   "display": "standalone",

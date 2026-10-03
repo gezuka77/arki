@@ -1,4 +1,4 @@
-# Arki
+# Arki Tracker
 
 *Everyday expenses, together.*
 

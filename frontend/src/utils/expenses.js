@@ -2,7 +2,7 @@ import { formatDate } from "./format.js";
 export const categories = Object.create(null),
   categoryDetails = Object.create(null);
 export const household = {
-  name: "Arki",
+  name: "Arki Tracker",
   currency: "EUR",
   default_category: "",
   map_lat: 0,

@@ -168,8 +168,8 @@ export default function App() {
             <Icon name="basket" size={26} />
           </span>
           <div>
-            {config.name}
-            <small>Everyday spending</small>
+            Arki Tracker
+            <small>{config.name}</small>
           </div>
         </div>
         {nav()}
@@ -194,7 +194,7 @@ export default function App() {
             <span className="brand-mark">
               <Icon name="basket" />
             </span>
-            <strong>{config.name}</strong>
+            <strong>Arki Tracker</strong>
           </div>
           <span className="desktop-context">HOUSEHOLD EXPENSES</span>
           <div className="topbar-actions">

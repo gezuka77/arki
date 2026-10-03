@@ -102,7 +102,7 @@ export default function SetupWizard({ options, onComplete }) {
         <span className="brand-mark">
           <Icon name="basket" size={28} />
         </span>
-        <strong>Arki</strong>
+        <strong>Arki Tracker</strong>
       </div>
       <h1>Make room for your everyday.</h1>
       <p className="muted">
