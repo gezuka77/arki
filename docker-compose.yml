@@ -1,4 +1,4 @@
-name: grocery-tracker-public
+name: arki
 services:
   app:
     build: .
@@ -12,7 +12,7 @@ services:
       SETUP_TOKEN: ${SETUP_TOKEN:?Run node scripts/configure.mjs first}
       TRUST_PROXY: ${TRUST_PROXY:-0}
       SHOP_DIRECTORY_BBOX: ${SHOP_DIRECTORY_BBOX:-}
-      MAP_USER_AGENT: ${MAP_USER_AGENT:-GroceryTracker/1.0}
+      MAP_USER_AGENT: ${MAP_USER_AGENT:-Arki/1.0}
     volumes:
       - household_data:/app/data
 volumes:

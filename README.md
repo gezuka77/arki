@@ -1,4 +1,6 @@
-# Grocery Tracker
+# Arki
+
+*Everyday expenses, together.*
 
 A self-hosted spending tracker for one household, with individual accounts, configurable categories, named pets, shared receipts, a monthly budget and purchase maps.
 
@@ -19,6 +21,8 @@ This public edition starts with an empty database and a first-run wizard. There 
 Requirements: Docker with Compose, and Node.js 22 or later to generate installation secrets.
 
 ```sh
+git clone https://github.com/gezuka77/arki.git
+cd arki
 node scripts/configure.mjs
 docker compose up -d --build
 ```
@@ -58,7 +62,7 @@ docker compose exec app node scripts/import-places.js
 
 Outside the imported region, coarse-area caches persist across restarts. First-time searches outside local/cached coverage still rely on the external provider. Set a descriptive `MAP_USER_AGENT` identifying your deployment if using public services. Optional `PHOTON_URL` and `OVERPASS_URL` environment variables can be added to your deployment.
 
-The browser retains up to 30 timing events in `window.groceryLocationTimings` for diagnostics, covering GPS, shop lookup and tile loading. These contain durations/source names, not coordinates or shop names. Server lookup logs likewise omit coordinates and query text. Reverse-proxy access logs may still capture search URLs; configure their retention appropriately.
+The browser retains up to 30 timing events in `window.arkiLocationTimings` for diagnostics, covering GPS, shop lookup and tile loading. These contain durations/source names, not coordinates or shop names. Server lookup logs likewise omit coordinates and query text. Reverse-proxy access logs may still capture search URLs; configure their retention appropriately.
 
 Map data: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licensed under ODbL. Map provider attribution is retained in the interface.
 

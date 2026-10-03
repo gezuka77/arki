@@ -2,8 +2,8 @@
 export function recordLocationTiming(phase, started, detail = {}) {
   const duration = Math.round(performance.now() - started);
   const event = { phase, duration_ms: duration, ...detail };
-  window.groceryLocationTimings = [
-    ...(window.groceryLocationTimings || []).slice(-29),
+  window.arkiLocationTimings = [
+    ...(window.arkiLocationTimings || []).slice(-29),
     event,
   ];
   return duration;

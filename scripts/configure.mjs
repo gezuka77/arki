@@ -3,7 +3,7 @@ import { writeFileSync } from "node:fs";
 try {
   writeFileSync(
     new URL("../.env", import.meta.url),
-    `JWT_SECRET=${randomBytes(32).toString("hex")}\nSETUP_TOKEN=${randomBytes(32).toString("hex")}\nHOST_PORT=8080\nTRUST_PROXY=0\nSHOP_DIRECTORY_BBOX=\nMAP_USER_AGENT=GroceryTracker/1.0\n`,
+    `JWT_SECRET=${randomBytes(32).toString("hex")}\nSETUP_TOKEN=${randomBytes(32).toString("hex")}\nHOST_PORT=8080\nTRUST_PROXY=0\nSHOP_DIRECTORY_BBOX=\nMAP_USER_AGENT=Arki/1.0\n`,
     { flag: "wx", mode: 0o600 },
   );
   console.log(

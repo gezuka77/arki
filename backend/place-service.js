@@ -12,7 +12,7 @@ const filename =
   process.env.PLACES_DB_PATH ||
   path.join(
     path.dirname(
-      process.env.DB_PATH || path.join(__dirname, "data", "grocery.db"),
+      process.env.DB_PATH || path.join(__dirname, "data", "household.db"),
     ),
     "places.db",
   );
@@ -33,7 +33,7 @@ async function download(url, options = {}, timeout = 18000) {
     headers: {
       "User-Agent":
         process.env.MAP_USER_AGENT ||
-        "GroceryTracker/1.0 (self-hosted household application)",
+        "Arki/1.0 (self-hosted household application)",
       ...options.headers,
     },
     signal: AbortSignal.timeout(timeout),

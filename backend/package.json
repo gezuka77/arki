@@ -1,7 +1,7 @@
 {
-  "name": "grocery-tracker-backend",
+  "name": "arki-backend",
   "version": "1.0.0",
-  "description": "Backend for grocery expense tracker",
+  "description": "Backend for Arki household expense tracker",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

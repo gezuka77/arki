@@ -29,7 +29,7 @@ export default function Login({ onLogin }) {
             <Icon name="basket" size={26} />
           </span>
           <div>
-            Grocery Tracker<small>Everyday spending</small>
+            Arki<small>Everyday spending</small>
           </div>
         </div>
         <h1>
@@ -61,7 +61,7 @@ export default function Login({ onLogin }) {
             <Icon name="basket" size={26} />
           </span>
           <h2>Welcome back.</h2>
-          <p>Sign in to your household’s grocery tracker.</p>
+          <p>Sign in to your household’s expense tracker.</p>
           <form onSubmit={handleSubmit}>
             <label>
               Username
