@@ -1,0 +1,31 @@
+{
+  "icons": [
+    "grocery",
+    "nonFood",
+    "dining",
+    "clothing",
+    "dog",
+    "cat",
+    "transport",
+    "health",
+    "leisure",
+    "gift",
+    "home",
+    "education",
+    "receipt"
+  ],
+  "currencies": ["EUR", "USD", "GBP", "SEK", "NOK", "DKK", "CHF", "CAD", "AUD"],
+  "presets": [
+    { "name": "Food", "icon": "grocery", "color": "#37795a" },
+    { "name": "Household", "icon": "nonFood", "color": "#956b29" },
+    { "name": "Eating out", "icon": "dining", "color": "#827099" },
+    { "name": "Clothing", "icon": "clothing", "color": "#467b9d" },
+    { "name": "Transport", "icon": "transport", "color": "#5769a0" },
+    { "name": "Health", "icon": "health", "color": "#a14f65" },
+    { "name": "Leisure", "icon": "leisure", "color": "#8563a0" },
+    { "name": "Gifts", "icon": "gift", "color": "#b16a39" },
+    { "name": "Home", "icon": "home", "color": "#587863" },
+    { "name": "Education", "icon": "education", "color": "#657581" },
+    { "name": "Other", "icon": "receipt", "color": "#69746f" }
+  ]
+}
