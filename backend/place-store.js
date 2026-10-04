@@ -83,6 +83,16 @@ class PlaceStore {
       CREATE INDEX IF NOT EXISTS directory_position ON directory(latitude,longitude);
       CREATE TABLE IF NOT EXISTS directory_meta (id INTEGER PRIMARY KEY CHECK(id=1), updated INTEGER NOT NULL, count INTEGER NOT NULL, region TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS place_cache (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated INTEGER NOT NULL);`);
+    if (
+      !this.db
+        .prepare("PRAGMA table_info(directory_meta)")
+        .all()
+        .some((c) => c.name === "region")
+    ) {
+      this.db.exec(
+        "ALTER TABLE directory_meta ADD COLUMN region TEXT NOT NULL DEFAULT ''",
+      );
+    }
   }
   status() {
     return this.db

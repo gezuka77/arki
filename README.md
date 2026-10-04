@@ -73,7 +73,7 @@ Map data: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyrigh
 - The `household_data` volume contains `household.db` (household data) and `places.db` (rebuildable directory/cache).
 - Back up the volume while the app is stopped, or use SQLite's online backup API. Do not copy an active SQLite database without its journal/WAL using ordinary file-copy tools.
 - Never use `docker compose down -v` unless you intend to delete the household's data.
-- This edition uses a new allocation schema and refuses older fixed-category databases. Do not connect it to a database from another edition; no automatic private-app migration is provided.
+- Older fixed-category databases require the explicit, backed-up migration described below. They are never migrated automatically on startup.
 - Keep `.env` with your backups so session-signing and installation configuration can be restored. Protect backups as private household data.
 
 The included Compose project has no external domain, reverse-proxy labels, fixed container name or automatic production deployment. CI checks do not deploy anything.
@@ -105,3 +105,31 @@ Before publishing, run `node scripts/check-public.mjs`, inspect `git diff --cach
 ## License
 
 MIT. See [LICENSE](LICENSE). Dependency and OpenStreetMap data licenses remain applicable separately.
+
+## Upgrading a fixed-category installation
+
+Keep the old application image for rollback. Stop writes, back up the volume and test migration on a copy first. The migration preserves receipt IDs, exact cents, users and password hashes, budgets and saved shops. It creates configurable categories, closes first-run setup and promotes the administrator you select. Existing sessions are revoked; users sign in again with their existing passwords. Unsplit legacy grocery amounts become **Unallocated**, so they are not silently classified as food.
+
+Create a private configuration JSON outside the repository:
+
+```json
+{"name":"My household","currency":"EUR","map_lat":0,"map_lon":0,"petName":"My pet","adminUserId":1}
+```
+
+Using the new application image, while the old app is stopped:
+
+```sh
+node scripts/migrate-legacy.js /data/old.db /private/migration.json /private/before-upgrade.db
+```
+
+This is the backend script (run from the container's `/app` directory). Mount the appropriate data and private configuration paths when running a temporary container. The backup path must not already exist. Invalid data aborts the transaction. Configure `DB_PATH` to the existing migrated database and provide `JWT_SECRET` and a fresh `SETUP_TOKEN` before starting the new app. Keep the original map search region in `SHOP_DIRECTORY_BBOX` if you previously used a local directory. For rollback, stop the new app, restore the complete pre-upgrade database and start the old image; do not run old code against the migrated schema.
+
+## Keeping a private installation in sync
+
+This repository is the canonical application source. Private deployment configuration, credentials, databases and screenshots stay in the installation repository or its ignored local files. From this repository, run:
+
+```sh
+node scripts/sync-installation.mjs /path/to/private-installation
+```
+
+The target must be a clean Git checkout. The script copies only tracked backend, frontend, Dockerfile and Docker ignore files, and removes obsolete tracked application files. It preserves the target's Compose configuration, environment, CI and data. Review, test, commit and deploy the resulting private changes. Never copy the private checkout back into the public repository; make shared changes here first and synchronize them to the installation. This makes updates deliberate and reviewable rather than automatically deploying every public commit.
