@@ -22,6 +22,10 @@ export default function PlacePicker({
     [latitude, setLatitude] = useState(""),
     [longitude, setLongitude] = useState(""),
     [replace, setReplace] = useState(false);
+  const [pinLocating, setPinLocating] = useState(false);
+  const [pinError, setPinError] = useState("");
+  const [pinCenter, setPinCenter] = useState(null);
+  const [pinAccuracy, setPinAccuracy] = useState(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState(null);
   const [phase, setPhase] = useState(""),
@@ -36,6 +40,7 @@ export default function PlacePicker({
     version.current++;
     controller.current?.abort();
     setBusy(false);
+    setPinLocating(false);
   };
   useEffect(() => {
     let active = true;
@@ -96,6 +101,9 @@ export default function PlacePicker({
     .slice(0, 8);
   const preview = (p, nearby = false) => {
     cancel();
+    setPinError("");
+    setPinCenter(null);
+    setPinAccuracy(null);
     setError("");
     setMapOpen(false);
     setCandidate(p);
@@ -193,6 +201,53 @@ export default function PlacePicker({
     } finally {
       clearTimeout(timeout);
       if (request === version.current) setBusy(false);
+    }
+  };
+  const locatePin = async () => {
+    cancel();
+    const request = ++version.current;
+    setPinError("");
+    setPinLocating(true);
+    const started = performance.now();
+    try {
+      if (!navigator.geolocation)
+        throw Error(
+          "Location is unavailable. Search for an address or place the pin manually.",
+        );
+      const p = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 12000,
+          maximumAge: 60000,
+          enableHighAccuracy: false,
+        }),
+      );
+      if (request !== version.current) return;
+      const position = {
+        latitude: p.coords.latitude,
+        longitude: p.coords.longitude,
+      };
+      setLatitude(position.latitude.toFixed(6));
+      setLongitude(position.longitude.toFixed(6));
+      setPinCenter(position);
+      setPinAccuracy(
+        Number.isFinite(p.coords.accuracy)
+          ? Math.round(p.coords.accuracy)
+          : null,
+      );
+      setReplace(false);
+      recordLocationTiming("manual-pin-gps", started, { outcome: "success" });
+    } catch (e) {
+      if (request !== version.current) return;
+      setPinError(
+        e.code === 1
+          ? "Location permission was denied. Allow location access and try again, or search for the venue’s address."
+          : e.code === 2 || e.code === 3
+            ? "Your phone could not find its position. Try again, search for the venue’s address, or place the pin manually."
+            : e.message,
+      );
+      recordLocationTiming("manual-pin-gps", started, { outcome: "failed" });
+    } finally {
+      if (request === version.current) setPinLocating(false);
     }
   };
   const lat = latitude.trim() === "" ? NaN : Number(latitude.replace(",", ".")),
@@ -369,26 +424,61 @@ export default function PlacePicker({
       </div>
       {candidate && (
         <div className="branch-confirmation" ref={confirmation}>
-          <h3>Confirm this shop</h3>
+          <h3>Confirm this place</h3>
           <p>
-            Tap the map or drag the pin to the exact branch. You can also enter
-            latitude and longitude from another map.
+            Use your current location for a temporary stall or event, or tap the
+            map and move the pin to the venue. Keep your own name on the
+            receipt.
           </p>
-          <MapBoundary>
-            <BranchMap
-              places={
-                valid ? [{ ...candidate, latitude: lat, longitude: lon }] : []
-              }
-              onSelect={() => {}}
-              onMove={({ latitude, longitude }) => {
-                setLatitude(latitude.toFixed(6));
-                setLongitude(longitude.toFixed(6));
-                setReplace(false);
-              }}
-            />
-          </MapBoundary>
+          <div className="place-actions">
+            <button
+              type="button"
+              className="secondary"
+              disabled={pinLocating}
+              onClick={locatePin}
+            >
+              Use my current location
+            </button>
+            {pinLocating && (
+              <button type="button" className="secondary" onClick={cancel}>
+                Cancel location request
+              </button>
+            )}
+          </div>
+          {pinError && <p role="alert">{pinError}</p>}
+          {pinAccuracy !== null && (
+            <p className="muted">
+              Phone accuracy: about {pinAccuracy} m. Check the pin and move it
+              if needed. Nothing is saved until you confirm.
+            </p>
+          )}
+          {pinLocating ? (
+            <div className="map-loading-placeholder" role="status">
+              <strong>Finding your current location…</strong>
+              <span>
+                The map will centre on your position when it is available.
+              </span>
+            </div>
+          ) : (
+            <MapBoundary>
+              <BranchMap
+                center={pinCenter}
+                places={
+                  valid ? [{ ...candidate, latitude: lat, longitude: lon }] : []
+                }
+                onSelect={() => {}}
+                onMove={({ latitude, longitude }) => {
+                  setPinCenter(null);
+                  setLatitude(latitude.toFixed(6));
+                  setLongitude(longitude.toFixed(6));
+                  setReplace(false);
+                }}
+              />
+            </MapBoundary>
+          )}
+
           <label>
-            Shop name on receipts
+            Place name on receipts
             <input
               className="field"
               value={displayName}
@@ -401,7 +491,7 @@ export default function PlacePicker({
             />
           </label>
           <label>
-            Shop address
+            Address (optional)
             <input
               className="field"
               value={address}
@@ -420,6 +510,7 @@ export default function PlacePicker({
                 className="field"
                 inputMode="decimal"
                 value={latitude}
+                disabled={pinLocating}
                 onChange={(e) => {
                   setLatitude(e.target.value);
                   setReplace(false);
@@ -433,6 +524,7 @@ export default function PlacePicker({
                 className="field"
                 inputMode="decimal"
                 value={longitude}
+                disabled={pinLocating}
                 onChange={(e) => {
                   setLongitude(e.target.value);
                   setReplace(false);
@@ -463,13 +555,18 @@ export default function PlacePicker({
               ? `Saving links all receipts named “${name}” to this branch.`
               : saveShop
                 ? "Save this branch once, then select it from Saved shops on future receipts."
-                : "The full address stays separate. This shop and its pin are saved when you save the expense."}
+                : "The full address stays separate. This place and its pin are saved when you save the expense."}
           </p>
           <div className="place-actions">
             <button
               type="button"
               className="primary"
-              disabled={!displayName.trim() || !valid || (conflict && !replace)}
+              disabled={
+                pinLocating ||
+                !displayName.trim() ||
+                !valid ||
+                (conflict && !replace)
+              }
               onClick={async () => {
                 try {
                   await onChoose(
@@ -496,12 +593,15 @@ export default function PlacePicker({
                 ? "Save map location"
                 : saveShop
                   ? "Save shop"
-                  : "Use this shop"}
+                  : "Use this place"}
             </button>
             <button
               type="button"
               className="secondary"
-              onClick={() => setCandidate(null)}
+              onClick={() => {
+                cancel();
+                setCandidate(null);
+              }}
             >
               Cancel selection
             </button>
