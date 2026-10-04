@@ -50,7 +50,7 @@ All household members share access to receipts and the budget. This is **one hou
 
 ## Maps and privacy
 
-Phone location is requested only after pressing **Nearby shops** **Use my current location** when placing a manual pin, or **Use current location** in area setup. Precise phone coordinates are not stored. Shop names and map pins are saved only after confirmation. The map shows a loading message until it has a relevant position.
+Phone location is requested only after pressing **Nearby shops**, **Use my current location** when placing a manual pin, or **Use current location** in area setup. Phone coordinates are not saved automatically. If you confirm a manual pin at your current position, those coordinates are saved as the place location. Shop names and map pins are saved only after confirmation. The map shows a loading message until it has a relevant position.
 
 By default, place search uses public Photon and Overpass services and map imagery uses OpenStreetMap tiles. These services receive the requests needed for their feature: search text, a coarse nearby search area, or viewed map tile coordinates, respectively. They have usage policies and no application-specific uptime guarantee. Configure your own provider endpoints for higher usage. Users can enter a shop name without a map pin. For temporary stalls or events, choose **Add precise location → Use my current location**, keep a custom place name, adjust the pin and confirm. Phone accuracy is shown; nothing is saved automatically. If location access fails, search for the venue address or place the pin manually.
 
