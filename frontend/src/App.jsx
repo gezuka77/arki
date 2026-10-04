@@ -1,3 +1,4 @@
+import TrendsSummary from "./components/TrendsSummary";
 import SetupWizard from "./components/SetupWizard";
 import HouseholdSettings from "./components/HouseholdSettings";
 import { configure, household } from "./utils/expenses";
@@ -153,7 +154,10 @@ export default function App() {
   const headings = {
     overview: ["Your everyday spending", "A little clarity for every receipt."],
     expenses: ["Your receipts", "Your household spending, together."],
-    trends: ["The bigger picture", "See how your spending adds up over time."],
+    trends: [
+      "Spending trends",
+      "Monthly totals, category splits and the places you spend.",
+    ],
     map: ["Where you shop", "Your familiar places, on the map."],
     settings: ["Your account", "A few things to make this space yours."],
   };
@@ -255,14 +259,16 @@ export default function App() {
             />
           )}
           {view === "trends" && (
-            <div className="trends-layout">
-              <MonthlyChart expenses={expenses} />
-              <LocationSummary
-                expenses={expenses}
-                onLocationUpdated={loadExpenses}
-              />
-              <MonthlyStats expenses={expenses} yearOnly />
-            </div>
+            <>
+              <TrendsSummary expenses={expenses} />
+              <div className="trends-layout">
+                <MonthlyChart expenses={expenses} />
+                <LocationSummary
+                  expenses={expenses}
+                  onLocationUpdated={loadExpenses}
+                />
+              </div>
+            </>
           )}
           {view === "map" && (
             <MapBoundary>

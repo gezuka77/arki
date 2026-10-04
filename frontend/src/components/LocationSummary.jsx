@@ -5,6 +5,7 @@ import { formatCurrency } from "../utils/format";
 import { summarize } from "../utils/expenses";
 export default function LocationSummary({ expenses, onLocationUpdated }) {
   const [editing, setEditing] = useState(null);
+  const [manage, setManage] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -36,23 +37,39 @@ export default function LocationSummary({ expenses, onLocationUpdated }) {
       setBusy(false);
     }
   };
-  if (!rows.length) return null;
+
   return (
-    <section className="panel">
+    <section className="panel locations-panel">
       <div className="panel-heading">
         <div>
           <h2 className="section-title">Where you spend</h2>
-          <p className="muted">
-            All-time spending by shop, restaurant and café.
-          </p>
+          <p className="muted">Your top places, ranked by all-time spending.</p>
         </div>
+        {!!rows.length && (
+          <button
+            type="button"
+            className="text-button"
+            aria-pressed={manage}
+            onClick={() => {
+              setManage(!manage);
+              setEditing(null);
+            }}
+          >
+            {manage ? "Done" : "Edit names"}
+          </button>
+        )}
       </div>
       {error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="error-banner">
           {error}
         </p>
       )}
-      <div className="space-y-3">
+      {!rows.length && (
+        <p className="trends-empty">
+          Your shops and other places will appear here after you add an expense.
+        </p>
+      )}
+      <div className="location-list">
         {rows.slice(0, count).map((row) => (
           <div className="location-row" key={row.location}>
             {editing === row.location ? (
@@ -67,7 +84,7 @@ export default function LocationSummary({ expenses, onLocationUpdated }) {
                     required
                   />
                 </label>
-                <p className="text-sm text-gray-600 my-2">
+                <p className="muted location-edit-help">
                   Renames this location on all bills. An existing name will
                   combine their totals.
                 </p>
@@ -76,7 +93,7 @@ export default function LocationSummary({ expenses, onLocationUpdated }) {
                 </button>
                 <button
                   disabled={busy}
-                  className="secondary ml-2"
+                  className="secondary location-edit-cancel"
                   type="button"
                   onClick={() => setEditing(null)}
                 >
@@ -85,18 +102,20 @@ export default function LocationSummary({ expenses, onLocationUpdated }) {
               </form>
             ) : (
               <>
-                <div className="flex justify-between gap-3">
-                  <div className="min-w-0 break-words">
-                    <h3 className="font-semibold">
+                <div className="location-heading">
+                  <div className="location-name">
+                    <h3 className="location-title">
                       {row.location || "No location"}
                     </h3>
-                    <p className="text-sm">{row.count} bills</p>
+                    <p className="muted">
+                      {row.count} {row.count === 1 ? "receipt" : "receipts"}
+                    </p>
                   </div>
-                  <p className="font-bold whitespace-nowrap">
+                  <p className="location-amount">
                     {household.currency} {formatCurrency(row.total / 100)}
                   </p>
                 </div>
-                <div className="text-sm text-gray-600 flex flex-wrap gap-3 mt-2">
+                <div className="location-payers">
                   {Object.entries(row.users).map(([user, value]) => (
                     <span key={user}>
                       {user}: {household.currency} {formatCurrency(value / 100)}
@@ -110,9 +129,9 @@ export default function LocationSummary({ expenses, onLocationUpdated }) {
                     }}
                   />
                 </div>
-                {row.location && (
+                {manage && row.location && (
                   <button
-                    className="text-button mt-2"
+                    className="text-button location-rename"
                     onClick={() => {
                       setEditing(row.location);
                       setName(row.location);
@@ -128,7 +147,7 @@ export default function LocationSummary({ expenses, onLocationUpdated }) {
       </div>
       {rows.length > count && (
         <button
-          className="secondary mt-4"
+          className="secondary location-more"
           onClick={() => setCount((n) => n + 5)}
         >
           Show more
