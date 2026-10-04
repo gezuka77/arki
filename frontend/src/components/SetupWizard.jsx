@@ -1,3 +1,4 @@
+import ShopArea from "./ShopArea";
 import { useState, useRef } from "react";
 import Icon from "./Icon";
 import { api } from "../api";
@@ -52,6 +53,7 @@ export default function SetupWizard({ options, onComplete }) {
     currency: "EUR",
     map_lat: 0,
     map_lon: 0,
+    shop_area: null,
   });
   const [token, setToken] = useState("");
   const [categories, setCategories] = useState(
@@ -168,32 +170,19 @@ export default function SetupWizard({ options, onComplete }) {
                 Dates use DD/MM/YYYY. Each installation uses one currency; it
                 cannot change after you record receipts.
               </p>
-              <details>
-                <summary>Optional starting area for manual maps</summary>
-                <p className="muted">
-                  Nearby shops still use your phone location when you ask. Leave
-                  this at zero to start with a world map.
-                </p>
-                {["map_lat", "map_lon"].map((key, i) => (
-                  <label key={key}>
-                    {i ? "Longitude" : "Latitude"}
-                    <input
-                      className="field"
-                      type="number"
-                      step="any"
-                      min={i ? -180 : -90}
-                      max={i ? 180 : 90}
-                      value={household[key]}
-                      onChange={(e) =>
-                        setHousehold({
-                          ...household,
-                          [key]: Number(e.target.value),
-                        })
-                      }
-                    />
-                  </label>
-                ))}
-              </details>
+              <ShopArea
+                value={household.shop_area}
+                setupToken={token}
+                onChange={(area) =>
+                  setHousehold({
+                    ...household,
+                    shop_area: area,
+                    ...(area
+                      ? { map_lat: area.latitude, map_lon: area.longitude }
+                      : {}),
+                  })
+                }
+              />
             </div>
           )}
           {step === 1 && (
@@ -406,6 +395,12 @@ export default function SetupWizard({ options, onComplete }) {
               <p>
                 <strong>{household.name}</strong> · {household.currency} ·
                 DD/MM/YYYY
+              </p>
+              <p>
+                Nearby-shop preparation:{" "}
+                {household.shop_area
+                  ? `${household.shop_area.label}, about ${household.shop_area.radius} km`
+                  : "Skipped"}
               </p>
               <h3>Categories and pets</h3>
               <ul>

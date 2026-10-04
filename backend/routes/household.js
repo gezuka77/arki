@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const db = require("../db");
 const catalog = require("../catalog.json");
+const area = require("../shop-area");
+const places = () => require("../place-service");
 const {
   validCategory,
   validUser,
@@ -13,6 +15,8 @@ const { verifyToken, requireAdmin } = require("./auth");
 const limit = require("../rate-limit")({ limit: 10 });
 const config = () => ({
   ...db.prepare("SELECT * FROM household WHERE id=1").get(),
+  shop_area: area.read(),
+  shop_directory: places().directoryStatus(),
   categories: db.prepare("SELECT * FROM categories ORDER BY position").all(),
 });
 router.get("/setup", (_req, res) =>
@@ -21,6 +25,40 @@ router.get("/setup", (_req, res) =>
     ...catalog,
   }),
 );
+async function searchArea(req, res) {
+  if (
+    typeof req.body.query !== "string" ||
+    req.body.query.trim().length < 2 ||
+    req.body.query.length > 160
+  )
+    return res.status(400).json({ error: "Enter a city or area name" });
+  try {
+    res.json(await places().searchArea(req.body.query.trim()));
+  } catch {
+    res
+      .status(503)
+      .json({
+        error:
+          "Area search is temporarily unavailable. Try again or use your current location.",
+      });
+  }
+}
+router.post("/setup/area-search", limit, (req, res) => {
+  if (db.prepare("SELECT id FROM household").get())
+    return res.status(409).json({ error: "Setup is already complete" });
+  const supplied = req.body.setupToken,
+    expected = process.env.SETUP_TOKEN;
+  if (
+    typeof supplied !== "string" ||
+    !expected ||
+    Buffer.byteLength(supplied) !== Buffer.byteLength(expected) ||
+    !crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))
+  )
+    return res
+      .status(403)
+      .json({ error: "Enter the installation setup token first" });
+  return searchArea(req, res);
+});
 router.post("/setup", limit, async (req, res, next) => {
   if (db.prepare("SELECT id FROM household").get())
     return res.status(409).json({ error: "Setup is already complete" });
@@ -38,6 +76,7 @@ router.post("/setup", limit, async (req, res, next) => {
   const { household, categories, users } = req.body;
   if (
     !validHousehold(household) ||
+    (household.shop_area !== undefined && !area.valid(household.shop_area)) ||
     !Array.isArray(categories) ||
     categories.length < 1 ||
     categories.length > 20 ||
@@ -86,12 +125,14 @@ router.post("/setup", limit, async (req, res, next) => {
         household.map_lat,
         household.map_lon,
       );
+      area.save(household.shop_area);
       users.forEach((u, i) =>
         db
           .prepare("INSERT INTO users(username,password,role) VALUES(?,?,?)")
           .run(u.username.trim(), hashes[i], u.role),
       );
     })();
+    void places().refreshDirectory();
     res
       .status(201)
       .json({ message: "Household created. Sign in with your new account." });
@@ -108,9 +149,16 @@ router.get("/household", (req, res) =>
   res.json({ ...config(), user: req.user, ...catalog }),
 );
 router.use(requireAdmin);
+router.post("/household/area-search", limit, searchArea);
+router.get("/household/directory", (_req, res) =>
+  res.json(places().directoryStatus()),
+);
 router.put("/household", (req, res) => {
   const h = req.body;
-  if (!validHousehold(h))
+  if (
+    !validHousehold(h) ||
+    (h.shop_area !== undefined && !area.valid(h.shop_area))
+  )
     return res
       .status(400)
       .json({ error: "Enter a valid household name, currency and map centre" });
@@ -131,6 +179,8 @@ router.put("/household", (req, res) => {
   db.prepare(
     "UPDATE household SET name=?,currency=?,default_category=?,map_lat=?,map_lon=? WHERE id=1",
   ).run(h.name.trim(), h.currency, h.default_category, h.map_lat, h.map_lon);
+  area.save(h.shop_area);
+  void places().refreshDirectory();
   res.json(config());
 });
 router.post("/categories", (req, res) => {

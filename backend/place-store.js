@@ -73,8 +73,9 @@ function ranked(places, lat, lon, radius = 1500) {
 }
 
 class PlaceStore {
-  constructor(filename, now = Date.now) {
+  constructor(filename, now = Date.now, getRegion = () => REGION) {
     this.now = now;
+    this.getRegion = getRegion;
     this.db = new Database(filename);
     this.db.pragma("journal_mode = WAL");
     this.db.pragma("busy_timeout = 5000");
@@ -99,7 +100,8 @@ class PlaceStore {
       .prepare("SELECT updated,count,region FROM directory_meta WHERE id=1")
       .get();
   }
-  import(data, minimum = 100) {
+  import(data, minimum = 0, region = this.getRegion()) {
+    const REGION = region;
     if (!REGION)
       throw Error("Configure SHOP_DIRECTORY_BBOX before importing a directory");
     const places = parseDirectory(data).filter(
@@ -112,7 +114,9 @@ class PlaceStore {
     const previous = this.status();
     if (
       places.length < minimum ||
-      (previous && places.length < previous.count * 0.5)
+      (previous &&
+        previous.region === JSON.stringify(REGION) &&
+        places.length < previous.count * 0.5)
     )
       throw Error("Incomplete shop directory; keeping previous version");
     this.db.transaction(() => {
@@ -136,6 +140,7 @@ class PlaceStore {
     return places.length;
   }
   covers(lat, lon) {
+    const REGION = this.getRegion();
     if (!REGION || this.status()?.region !== JSON.stringify(REGION))
       return false;
     // Only claim coverage when the entire search circle is inside the imported rectangle.
@@ -163,6 +168,7 @@ class PlaceStore {
     );
   }
   search(query) {
+    const REGION = this.getRegion();
     if (!REGION || this.status()?.region !== JSON.stringify(REGION)) return [];
     const terms = normalize(query.trim()).split(/\s+/).filter(Boolean);
     if (!terms.length) return [];

@@ -31,7 +31,7 @@ Open **http://localhost:8080** on the server. If the server is remote, forward t
 
 Read `SETUP_TOKEN` from the local `.env` file, then follow the wizard:
 
-1. Enter the installation token, household name and currency. Optionally set the initial map centre for manual pins.
+1. Enter the installation token, household name and currency. Optionally choose a city or use your current location to prepare faster nearby-shop searches. Choose an area of about 5, 10 or 20 km, or skip it.
 2. Choose categories and add custom categories or named pets. The first category is the initial allocation for new receipts.
 3. Create the first administrator and optional household members. Passwords require at least 12 characters and at most 72 UTF-8 bytes.
 4. Review and create the household, then sign in.
@@ -50,11 +50,13 @@ All household members share access to receipts and the budget. This is **one hou
 
 ## Maps and privacy
 
-Phone location is requested only after pressing **Nearby shops**. Precise phone coordinates are not stored. Shop names and map pins are saved only after confirmation. The map shows a loading message until it has a relevant position.
+Phone location is requested only after pressing **Nearby shops** or **Use current location** in area setup. Precise phone coordinates are not stored. Shop names and map pins are saved only after confirmation. The map shows a loading message until it has a relevant position.
 
 By default, place search uses public Photon and Overpass services and map imagery uses OpenStreetMap tiles. These services receive the requests needed for their feature: search text, a coarse nearby search area, or viewed map tile coordinates, respectively. They have usage policies and no application-specific uptime guarantee. Configure your own provider endpoints for higher usage. Users can enter a shop name without a map pin.
 
-An optional regional directory removes external nearby-search latency in a chosen area. Set `SHOP_DIRECTORY_BBOX=south,west,north,east` in `.env` using decimal degrees for a modest region. The application downloads named shops and dining/veterinary places in the background, refreshes weekly, and keeps the last good copy when a refresh fails. It does not overwrite confirmed shop names or pins. No region is enabled by default. For deliberate initial population:
+An optional regional directory removes external nearby-search latency in a chosen area. Choose it in the wizard or **Settings → Household administration**. The approximate centre is also used as the starting area for manual maps. Phone coordinates are rounded before being saved; this prepares shop lookup, not GPS acquisition. The screen shows download progress, ready shop counts or retry status. A new area is downloaded before it replaces the old directory, and searches outside prepared coverage continue to use cached/provider results.
+
+For installations managed through server configuration, set `SHOP_DIRECTORY_BBOX=south,west,north,east` in `.env` using decimal degrees for a modest region. The application downloads named shops and dining/veterinary places in the background, refreshes weekly, and keeps the last good copy when a refresh fails. It does not overwrite confirmed shop names or pins. No region is enabled by default unless chosen during setup. An explicit household selection overrides the server setting; turning preparation off disables the directory but keeps ordinary search caching. Existing installations retain their server-configured region until an administrator changes it. For deliberate initial population:
 
 ```sh
 docker compose exec app node scripts/import-places.js

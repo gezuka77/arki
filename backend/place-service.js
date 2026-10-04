@@ -17,12 +17,19 @@ const filename =
     "places.db",
   );
 fs.mkdirSync(path.dirname(filename), { recursive: true });
-const store = new PlaceStore(filename);
+const area = require("./shop-area");
+const effectiveRegion = () => {
+  const chosen = area.read();
+  return chosen === undefined ? REGION : area.bounds(chosen);
+};
+const store = new PlaceStore(filename, Date.now, effectiveRegion);
 const pending = new Map();
 const cooldown = new Map();
 let nextRequest = 0,
   refreshing = null,
-  lastRefreshAttempt = 0;
+  lastRefreshAttempt = 0,
+  lastAttemptRegion = "",
+  refreshError = false;
 const provider = () =>
   process.env.OVERPASS_URL || "https://overpass-api.de/api/interpreter";
 const selectors = (area) =>
@@ -52,26 +59,31 @@ const overpass = (query, timeout) =>
     timeout,
   );
 async function refreshDirectory(force = false) {
-  if (!REGION) return;
+  const REGION = effectiveRegion();
+  if (!REGION || process.env.PLACES_REFRESH_DISABLED === "1") return;
   if (refreshing) return refreshing;
   if (
     !force &&
     ((store.status()?.region === JSON.stringify(REGION) &&
       Date.now() - store.status().updated < WEEK) ||
-      Date.now() - lastRefreshAttempt < 3600000)
+      (lastAttemptRegion === JSON.stringify(REGION) &&
+        Date.now() - lastRefreshAttempt < 3600000))
   )
     return;
   lastRefreshAttempt = Date.now();
+  lastAttemptRegion = JSON.stringify(REGION);
+  refreshError = false;
   refreshing = (async () => {
     try {
-      const count = store.import(
-        await overpass(
-          `[out:json][timeout:90];${selectors(REGION.join(","))}`,
-          120000,
-        ),
+      const data = await overpass(
+        `[out:json][timeout:90];${selectors(REGION.join(","))}`,
+        120000,
       );
+      if (JSON.stringify(effectiveRegion()) !== JSON.stringify(REGION)) return;
+      const count = store.import(data, 0, REGION);
       console.log(JSON.stringify({ event: "shop_directory_refreshed", count }));
     } catch (e) {
+      refreshError = true;
       console.warn(
         JSON.stringify({
           event: "shop_directory_refresh_failed",
@@ -83,6 +95,8 @@ async function refreshDirectory(force = false) {
       );
     } finally {
       refreshing = null;
+      if (JSON.stringify(effectiveRegion()) !== JSON.stringify(REGION))
+        setTimeout(() => refreshDirectory(), 0).unref();
     }
   })();
   return refreshing;
@@ -178,3 +192,35 @@ async function search(query) {
   );
 }
 module.exports = { store, nearby, search, startRefresh, refreshDirectory };
+
+module.exports.directoryStatus = () => {
+  const region = effectiveRegion(),
+    saved = store.status(),
+    matches = region && saved?.region === JSON.stringify(region);
+  return {
+    configured: !!region,
+    source: area.read() === undefined ? "server" : "household",
+    state: !region
+      ? "disabled"
+      : refreshing
+        ? "preparing"
+        : refreshError
+          ? "retrying"
+          : matches
+            ? "ready"
+            : "pending",
+    count: matches ? saved.count : 0,
+    updated: matches ? saved.updated : null,
+  };
+};
+module.exports.searchArea = async (query) => {
+  const url = new URL(
+    process.env.PHOTON_URL || "https://photon.komoot.io/api/",
+  );
+  url.search = new URLSearchParams({ q: query, limit: "5" }).toString();
+  return (
+    await cachedLookup(`centre:${query.toLowerCase()}`, async () =>
+      photonPlaces(await download(url)),
+    )
+  ).value;
+};

@@ -1,3 +1,4 @@
+import ShopArea from "./ShopArea";
 import { useState, useEffect } from "react";
 import { api } from "../api";
 import { CategoryFields } from "./SetupWizard";
@@ -106,22 +107,19 @@ export default function HouseholdSettings({ config, onUpdated }) {
                 ))}
             </select>
           </label>
-          {["map_lat", "map_lon"].map((key, i) => (
-            <label key={key}>
-              Manual map {i ? "longitude" : "latitude"}
-              <input
-                type="number"
-                step="any"
-                className="field"
-                min={i ? -180 : -90}
-                max={i ? 180 : 90}
-                value={form[key]}
-                onChange={(e) =>
-                  setForm({ ...form, [key]: Number(e.target.value) })
-                }
-              />
-            </label>
-          ))}
+          <ShopArea
+            value={form.shop_area}
+            directory={config.shop_directory}
+            onChange={(area) =>
+              setForm({
+                ...form,
+                shop_area: area,
+                ...(area
+                  ? { map_lat: area.latitude, map_lon: area.longitude }
+                  : {}),
+              })
+            }
+          />
           <button className="primary">Save household</button>
         </form>
         <h3>Categories and named pets</h3>

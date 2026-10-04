@@ -31,6 +31,15 @@ async function authenticatedRequest(path, method = "GET", body, signal) {
 }
 
 export const api = {
+  searchArea: (query, setupToken) =>
+    authenticatedRequest(
+      setupToken === undefined
+        ? "/household/area-search"
+        : "/setup/area-search",
+      "POST",
+      { query, setupToken },
+    ),
+  getDirectoryStatus: () => authenticatedRequest("/household/directory"),
   getSetup: () => authenticatedRequest("/setup"),
   setup: (body) => authenticatedRequest("/setup", "POST", body),
   getHousehold: () => authenticatedRequest("/household"),
