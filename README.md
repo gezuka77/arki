@@ -16,6 +16,23 @@ This public edition starts with an empty database and a first-run wizard. There 
 - Administrators manage categories, household settings and accounts. Members can manage shared receipts, shop pins and the budget. Archive categories and deactivate users without deleting receipt history.
 - Phone-friendly interface and Home Screen icons. Dates use **DD/MM/YYYY**; amounts accept a comma or decimal point. Currency is chosen once per household before recording receipts. Supported currencies use two decimal places; no exchange-rate conversion is performed.
 
+## Screenshots
+
+Real browser captures using a fictional demo household. No personal accounts, receipts or locations are shown.
+
+### Desktop overview
+
+![Arki Tracker desktop overview with category totals, shared receipts and a monthly budget](docs/images/desktop-overview.png)
+
+### Mobile overview and receipt splitting
+
+<p>
+  <img src="docs/images/mobile-overview.png" alt="Mobile overview with household spending and category cards" width="280" />
+  <img src="docs/images/mobile-splits.png" alt="Mobile receipt split with Food locked and Household and Milo sliders available to adjust" width="280" />
+</p>
+
+[See the setup wizard and more mobile screenshots](docs/screenshots.md).
+
 ## Quick start
 
 Requirements: Docker with Compose, and Node.js 22 or later to generate installation secrets.
