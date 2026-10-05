@@ -4,7 +4,7 @@
 
 A self-hosted spending tracker for one household, with individual accounts, configurable categories, named pets, shared receipts, a monthly budget and purchase maps.
 
-This public edition starts with an empty database and a first-run wizard. There are no default accounts, passwords, household names, pet names or receipts.
+A new installation starts with an empty database and a first-run wizard. No sample receipts or default user accounts are created.
 
 ## Features
 
@@ -61,94 +61,29 @@ To use a different local port, change `HOST_PORT` in `.env`. Do not change the C
 
 Open **Settings → Household administration** as an administrator. Add, rename, recolour or archive categories and pets. Choose a different default before archiving the current default category. Archived allocations remain visible in history and can be edited on their existing receipts, but cannot be added to new receipts.
 
-Users are individual local accounts; this edition does not include public signup, email invitations or password-reset email. An administrator can add users, reset another user's password, change their role or deactivate them. Account changes revoke existing sessions. The final active administrator cannot be demoted or deactivated. Every user can change their own password in Account settings.
+Users have individual local accounts; Arki Tracker does not include public signup, email invitations or password-reset email. An administrator can add users, reset another user's password, change their role or deactivate them. Account changes revoke existing sessions. The final active administrator cannot be demoted or deactivated. Every user can change their own password in Account settings.
 
 All household members share access to receipts and the budget. This is **one household per installation**, not a multi-tenant service.
 
 ## Maps and privacy
 
-Phone location is requested only after pressing **Nearby shops**, **Use my current location** when placing a manual pin, or **Use current location** in area setup. Phone coordinates are not saved automatically. If you confirm a manual pin at your current position, those coordinates are saved as the place location. Shop names and map pins are saved only after confirmation. The map shows a loading message until it has a relevant position.
+Phone location is requested only after pressing **Nearby shops**, **Use my current location** when placing a manual pin, or **Use current location** in area setup. Phone coordinates are not saved automatically. If you confirm a manual pin at your current position, those coordinates are saved as the place location. Shop names and map pins are saved only after confirmation. Nearby-shop search shows a loading message while finding your position and looking up shops.
 
 By default, place search uses public Photon and Overpass services and map imagery uses OpenStreetMap tiles. These services receive the requests needed for their feature: search text, a coarse nearby search area, or viewed map tile coordinates, respectively. They have usage policies and no application-specific uptime guarantee. Configure your own provider endpoints for higher usage. Users can enter a shop name without a map pin. For temporary stalls or events, choose **Add precise location → Use my current location**, keep a custom place name, adjust the pin and confirm. Phone accuracy is shown; nothing is saved automatically. If location access fails, search for the venue address or place the pin manually.
 
 An optional regional directory removes external nearby-search latency in a chosen area. Choose it in the wizard or **Settings → Household administration**. The approximate centre is also used as the starting area for manual maps. Phone coordinates are rounded before being saved; this prepares shop lookup, not GPS acquisition. The screen shows download progress, ready shop counts or retry status. A new area is downloaded before it replaces the old directory, and searches outside prepared coverage continue to use cached/provider results.
 
-For installations managed through server configuration, set `SHOP_DIRECTORY_BBOX=south,west,north,east` in `.env` using decimal degrees for a modest region. The application downloads named shops and dining/veterinary places in the background, refreshes weekly, and keeps the last good copy when a refresh fails. It does not overwrite confirmed shop names or pins. No region is enabled by default unless chosen during setup. An explicit household selection overrides the server setting; turning preparation off disables the directory but keeps ordinary search caching. Existing installations retain their server-configured region until an administrator changes it. For deliberate initial population:
-
-```sh
-docker compose exec app node scripts/import-places.js
-```
-
-Outside the imported region, coarse-area caches persist across restarts. First-time searches outside local/cached coverage still rely on the external provider. Set a descriptive `MAP_USER_AGENT` identifying your deployment if using public services. Optional `PHOTON_URL` and `OVERPASS_URL` environment variables can be added to your deployment.
-
-The browser retains up to 30 timing events in `window.arkiLocationTimings` for diagnostics, covering GPS, shop lookup and tile loading. These contain durations/source names, not coordinates or shop names. Server lookup logs likewise omit coordinates and query text. Reverse-proxy access logs may still capture search URLs; configure their retention appropriately.
+Outside the prepared area, nearby searches still work through the external provider and cache their results. See the [administration guide](docs/administration.md) for provider configuration, directory management and diagnostics.
 
 Map data: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licensed under ODbL. Map provider attribution is retained in the interface.
 
-## Deployment and backups
+## Documentation
 
-- Use HTTPS for network access and phone geolocation. Keep the database volume private.
-- `TRUST_PROXY=0` is the default. Use `1` only when requests pass through exactly one trusted reverse proxy and direct access to the app is blocked.
-- The `household_data` volume contains `household.db` (household data) and `places.db` (rebuildable directory/cache).
-- Back up the volume while the app is stopped, or use SQLite's online backup API. Do not copy an active SQLite database without its journal/WAL using ordinary file-copy tools.
-- Never use `docker compose down -v` unless you intend to delete the household's data.
-- Older fixed-category databases require the explicit, backed-up migration described below. They are never migrated automatically on startup.
-- Keep `.env` with your backups so session-signing and installation configuration can be restored. Protect backups as private household data.
-
-The included Compose project has no external domain, reverse-proxy labels, fixed container name or automatic production deployment. CI checks do not deploy anything.
-
-## Development and checks
-
-Use Node.js 22 or later:
-
-```sh
-npm ci --prefix backend
-npm ci --prefix frontend
-npm test --prefix backend
-npm test --prefix frontend
-npm run build --prefix frontend
-node scripts/check-public.mjs
-```
-
-For local development, generate `.env`, then run these in separate terminals:
-
-```sh
-node --env-file=.env backend/server.js
-npm run dev --prefix frontend -- --host 127.0.0.1
-```
-
-Vite proxies `/api` to port 3000. Tests create isolated temporary databases and credentials; they do not use a running household installation.
-
-Before publishing, run `node scripts/check-public.mjs`, inspect `git diff --cached` and verify the tracked file list contains only source, documentation and generic assets. The script is a useful guard, not a guarantee that all possible secrets or personal information have been detected.
+- [Administration guide](docs/administration.md): hosting, backups, map providers and upgrading older installations.
+- [Screenshot gallery](docs/screenshots.md): desktop, mobile and setup views.
+- [Contributing](CONTRIBUTING.md): development, tests and documentation maintenance.
+- [Security and privacy](SECURITY.md): security reporting and deployment considerations.
 
 ## License
 
 MIT. See [LICENSE](LICENSE). Dependency and OpenStreetMap data licenses remain applicable separately.
-
-## Upgrading a fixed-category installation
-
-Keep the old application image for rollback. Stop writes, back up the volume and test migration on a copy first. The migration preserves receipt IDs, exact cents, users and password hashes, budgets and saved shops. It creates configurable categories, closes first-run setup and promotes the administrator you select. Existing sessions are revoked; users sign in again with their existing passwords. Unsplit legacy grocery amounts become **Unallocated**, so they are not silently classified as food.
-
-Create a private configuration JSON outside the repository:
-
-```json
-{"name":"My household","currency":"EUR","map_lat":0,"map_lon":0,"petName":"My pet","adminUserId":1}
-```
-
-Using the new application image, while the old app is stopped:
-
-```sh
-node scripts/migrate-legacy.js /data/old.db /private/migration.json /private/before-upgrade.db
-```
-
-This is the backend script (run from the container's `/app` directory). Mount the appropriate data and private configuration paths when running a temporary container. The backup path must not already exist. Invalid data aborts the transaction. Configure `DB_PATH` to the existing migrated database and provide `JWT_SECRET` and a fresh `SETUP_TOKEN` before starting the new app. Keep the original map search region in `SHOP_DIRECTORY_BBOX` if you previously used a local directory. For rollback, stop the new app, restore the complete pre-upgrade database and start the old image; do not run old code against the migrated schema.
-
-## Keeping a private installation in sync
-
-This repository is the canonical application source. Private deployment configuration, credentials, databases and screenshots stay in the installation repository or its ignored local files. From this repository, run:
-
-```sh
-node scripts/sync-installation.mjs /path/to/private-installation
-```
-
-The target must be a clean Git checkout. The script copies only tracked backend, frontend, Dockerfile and Docker ignore files, and removes obsolete tracked application files. It preserves the target's Compose configuration, environment, CI and data. Review, test, commit and deploy the resulting private changes. Never copy the private checkout back into the public repository; make shared changes here first and synchronize them to the installation. This makes updates deliberate and reviewable rather than automatically deploying every public commit.

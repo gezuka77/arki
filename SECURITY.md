@@ -6,6 +6,6 @@ First-run setup requires a generated installation token. The setup endpoint cann
 
 The application is intended for a small trusted household behind HTTPS. JWTs are stored in browser local storage, so use trusted devices and keep dependencies updated. Protect the server, reverse proxy, `.env`, volume and backups. Treat exported CSV files as private spending data. No public-registration or email-recovery service is included.
 
-Maps contact external providers as documented in README. Place timing diagnostics omit coordinates and search names. The application itself does not send analytics or telemetry.
+Maps contact external providers as documented in [Maps and privacy](README.md#maps-and-privacy). Place timing diagnostics omit coordinates and search names. The application itself does not send analytics or telemetry.
 
-A fresh checkout contains no installation secrets or household database. Secret scanning is included as a release guard; review every release before publishing.
+For repository publication and secret-checking procedures, see [Publication checks](CONTRIBUTING.md#publication-checks).

@@ -29,10 +29,3 @@ The same receipt, scrolled to its split controls. Locking Food keeps its amount 
 Select preset categories, customize their icons and colours, and add named pets.
 
 ![Setup wizard on the categories and pets step, using a fictional pet named Milo](images/setup-wizard.png)
-
-## Updating these images
-
-- Use a separate installation with an empty temporary database and newly generated credentials. Never capture a real household or copy its database.
-- Populate only fictional users, receipts and places. Do not capture setup tokens, passwords, account menus containing real identities or geolocation from a personal device.
-- Capture the rendered app at desktop and mobile sizes, and visually inspect every image before committing it.
-- Keep images in `docs/images/` and update their descriptive alternative text when the contents change.
