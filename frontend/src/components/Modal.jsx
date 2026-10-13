@@ -29,7 +29,7 @@ export default function Modal({ open, onClose, children }) {
       >
         <Icon name="close" />
       </button>
-      {children}
+      {open && children}
     </dialog>
   );
 }
