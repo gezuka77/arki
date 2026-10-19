@@ -63,3 +63,7 @@ Commit any tracked changes in the target checkout before running the sync. The s
 ## License
 
 By contributing, you agree that your contribution is available under the project's MIT license.
+
+## React runtime compatibility
+
+The frontend uses React 19 with matching React DOM and version 19 type packages. Keep these four dependencies aligned when upgrading and regenerate the frontend lockfile. The Vite React plugin supplies the required automatic JSX transform; the app uses `createRoot`. See the [React 19 upgrade guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide).
