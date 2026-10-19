@@ -66,13 +66,13 @@ if (fs.existsSync(publicPath)) {
   );
 
   // SPA fallback
-  app.get("*", (req, res) => {
+  app.get("/{*splat}", (req, res) => {
     res
       .set("Cache-Control", "no-cache")
       .sendFile(path.join(publicPath, "index.html"));
   });
 } else {
-  app.get("*", (req, res) => {
+  app.get("/{*splat}", (req, res) => {
     res.json({
       message:
         "Frontend not built yet. Run in development mode or build frontend first.",
