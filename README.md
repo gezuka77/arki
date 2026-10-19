@@ -87,3 +87,7 @@ Map data: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyrigh
 ## License
 
 MIT. See [LICENSE](LICENSE). Dependency and OpenStreetMap data licenses remain applicable separately.
+
+### Express 5
+
+The backend uses Express 5 on Node 22. SPA fallback routes use the named wildcard `/{*splat}` to include the root path. Backend tests exercise server startup with and without built frontend files, deep-link fallback, missing assets and API 404 responses.
