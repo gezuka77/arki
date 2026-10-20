@@ -4,7 +4,7 @@ Use a separate development installation with fictional example data. Do not incl
 
 ## Local development
 
-Use Node.js 22 or later:
+Use Node.js 22.12 or later:
 
 ```sh
 npm ci --prefix backend
@@ -67,3 +67,9 @@ By contributing, you agree that your contribution is available under the project
 ## React runtime compatibility
 
 The frontend uses React 19 with matching React DOM and version 19 type packages. Keep these four dependencies aligned when upgrading and regenerate the frontend lockfile. The Vite React plugin supplies the required automatic JSX transform; the app uses `createRoot`. See the [React 19 upgrade guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide).
+
+## Vite toolchain compatibility
+
+Vite 8 and `@vitejs/plugin-react` 6 must be upgraded together and the frontend lockfile regenerated with normal npm resolution. Do not bypass peer dependency checks. The existing `react()` configuration uses the automatic JSX runtime without optional React Compiler or Babel packages.
+
+Vite 8 uses Rolldown/Oxc and defaults to Chrome/Edge 111, Firefox 114 and Safari 16.4 as build targets. Check production builds, development refresh, charts and maps at desktop/mobile sizes when updating. See the [Vite 7 migration guide](https://v7.vite.dev/guide/migration) and [Vite 8 migration guide](https://vite.dev/guide/migration).
